@@ -176,7 +176,6 @@ def SeleccionarArea():
           "[ERROR] Opción no válida. Por favor, ingrese un número del 1 al 6.\n"
       )
 
-
 def main():
   # Dimensionamiento de arreglos (tamaño 101 para usar índices del 1 al 100)
   codigos = [""] * 101
@@ -237,7 +236,7 @@ def main():
 
       while True:
         asunto = input(
-            "Ingrese asunto (ej. TRAMITE DE BECAS SOCIOECONOMICA): "
+            "Ingrese asunto (ej. SOLICITUD DE BECA): "
         ).strip()
         if len(asunto) == 0:
           print("[ERROR] El asunto no puede estar vacío.")
@@ -533,7 +532,6 @@ def main():
       op = 0
       print("[ERROR] Opción no válida. Intente de nuevo.")
       input("Presione Enter para continuar...")
-
 
 if __name__ == "__main__":
   main()

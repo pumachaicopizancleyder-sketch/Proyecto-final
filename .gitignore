@@ -1,0 +1,18 @@
+# Archivos locales de expedientes y listados generados
+/expedientes.txt/
+
+# Python
+__pycache__/
+*.py[cod]
+.venv/
+venv/
+
+# Configuración local y credenciales
+.vscode/
+.env
+.env.*
+!.env.example
+
+# Archivos del sistema
+Thumbs.db
+.DS_Store
