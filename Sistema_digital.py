@@ -249,36 +249,6 @@ def seleccionar_estado():
         if opcion.isdecimal() and 1 <= int(opcion) <= len(estados):
             return estados[int(opcion) - 1]
         print("[ERROR] Opción inválida, ingrese un número del 0 al 8")
-def mostrar_historial(expediente):
-    print("\n=== SEGUIMIENTO DEL EXPEDIENTE ===")
-    print(f"Expediente: {expediente['Código']} - {expediente['Asunto']}")
-    print(f"Fecha de registro: {expediente['Fecha']} {expediente['Hora']}")
-    print(f"Área actual: {expediente['Area']}")
-    print(f"Estado actual: {expediente['Estado']}")
-
-    historial = expediente.get("Historial") or []
-    if len(historial) == 0:
-        print("Todavía no hay movimientos de atención registrados.")
-        return
-
-    for numero, movimiento in enumerate(historial, start=1):
-        print("-" * 55)
-        print(
-            f"Movimiento {numero} | {movimiento.get('Fecha', '')} "
-            f"{movimiento.get('Hora', '')} | "
-            f"{movimiento.get('Accion', 'Atención')}"
-        )
-        print(
-            f"Área: {movimiento.get('AreaOrigen', '')} -> "
-            f"{movimiento.get('AreaDestino', '')}"
-        )
-        print(
-            f"Estado: {movimiento.get('EstadoAnterior', '')} -> "
-            f"{movimiento.get('EstadoNuevo', '')}"
-        )
-        print(f"Detalle: {movimiento.get('Detalle', '')}")
-
-    print("-" * 55)
 def solicitar_detalle(mensaje):
     while True:
         detalle = input(f"{mensaje} (0 para cancelar): ").strip()
@@ -324,6 +294,36 @@ def registrar_movimiento(ruta, expedientes, seleccionado, nueva_area, nuevo_esta
         print(f"Atención guardada. No se pudo actualizar listado.txt: {error}")
 
     return True
+def mostrar_historial(expediente):
+    print("\n=== SEGUIMIENTO DEL EXPEDIENTE ===")
+    print(f"Expediente: {expediente['Código']} - {expediente['Asunto']}")
+    print(f"Fecha de registro: {expediente['Fecha']} {expediente['Hora']}")
+    print(f"Área actual: {expediente['Area']}")
+    print(f"Estado actual: {expediente['Estado']}")
+
+    historial = expediente.get("Historial") or []
+    if len(historial) == 0:
+        print("Todavía no hay movimientos de atención registrados.")
+        return
+
+    for numero, movimiento in enumerate(historial, start=1):
+        print("-" * 55)
+        print(
+            f"Movimiento {numero} | {movimiento.get('Fecha', '')} "
+            f"{movimiento.get('Hora', '')} | "
+            f"{movimiento.get('Accion', 'Atención')}"
+        )
+        print(
+            f"Área: {movimiento.get('AreaOrigen', '')} -> "
+            f"{movimiento.get('AreaDestino', '')}"
+        )
+        print(
+            f"Estado: {movimiento.get('EstadoAnterior', '')} -> "
+            f"{movimiento.get('EstadoNuevo', '')}"
+        )
+        print(f"Detalle: {movimiento.get('Detalle', '')}")
+
+    print("-" * 55)
 def atender_expediente(ruta,expedientes):
     print("\n === ATENDER EXPEDIENTES ===")
     if len(expedientes) == 0:
