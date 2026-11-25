@@ -1,4 +1,5 @@
 import json
+import re
 from pathlib import Path
 from datetime import datetime
 from tempfile import NamedTemporaryFile
@@ -23,10 +24,35 @@ def guardar_expedientes(ruta, expedientes):
         if ruta_temporal is not None:
             ruta_temporal.unlink(missing_ok=True)
 def cargar_expedientes(ruta):
-    if not ruta.exists():
+    try:
+        with ruta.open("r", encoding="utf-8") as archivo:
+            expedientes = json.load(archivo)
+        if not isinstance(expedientes, list):
+            raise ValueError("El archivo debe contener una lista.")
+        campos = ["Código", "Nombre", "Apellido", "DNI", "Telefono", "Correo",
+                  "Fecha", "Hora", "Asunto", "Folio", "Area", "Estado"]
+        for expediente in expedientes:
+            if not isinstance(expediente, dict):
+                raise ValueError("Hay un expediente con estructura incorrecta.")
+            for campo in campos:
+                if not isinstance(expediente.get(campo), str):
+                    raise ValueError(f"Campo ausente o incorrecto: {campo}.")
+            if re.fullmatch(r"[0-9]{4}-EXP-[0-9]{4,}", expediente["Código"]) is None:
+                raise ValueError("Hay un código con formato incorrecto.")
+            historial = expediente.get("Historial", [])
+            if historial is not None:
+                if not isinstance(historial, list):
+                    raise ValueError("Historial inválido.")
+                for movimiento in historial:
+                    if not isinstance(movimiento, dict):
+                        raise ValueError("Movimiento de historial inválido.")
+        return expedientes
+    except FileNotFoundError:
         return []
-    with ruta.open("r", encoding="utf-8") as archivo:
-        return json.load(archivo)
+    except (OSError, ValueError) as error:
+        print(f"[ERROR] No se pudieron cargar los expedientes: {error}")
+        print("Revise el archivo antes de continuar.")
+        return None
 def selecionar_asunto():
     asuntos = [
         "Solicitud de Vacante",
@@ -131,6 +157,14 @@ def generar_codigo(expedientes, anio):
         if numero.isdecimal():
             ultimo_numero = max(ultimo_numero, int(numero))
     return f"{anio}-EXP-{ultimo_numero + 1:04d}"
+def validar_nombre(texto):
+    texto = texto.replace(" ", "").replace("-", "").replace("'","").replace("’", "")
+    return texto.isalpha()
+def validar_correo(correo):
+    patron_usuario = r"[A-Za-z0-9_%+-]+(?:\.[A-Za-z0-9_%+-]+)*"
+    patron_dominio = r"(?:[A-Za-z0-9](?:[A-Za-z0-9-]*[A-Za-z0-9])?\.)+[A-Za-z]{2,}"
+    patron = patron_usuario + "@" + patron_dominio
+    return re.fullmatch(patron,correo) is not None
 def registrar_expediente(ruta, expedientes_guardados):
     print("==REGISTRAR EXPEDIENTES==")
     ahora = datetime.now()
@@ -139,17 +173,15 @@ def registrar_expediente(ruta, expedientes_guardados):
     #Registro Nombre
     while True:
         nombre = input("Ingrese nombre: ").strip()
-        if len(nombre) == 0:
-            print("[ERROR]El nombre no puede estar vacío")
-        else:
-            break
+        if validar_nombre(nombre):
+            break     
+        print("[ERROR] Use letras, espacios, guiones o apóstrofos en el nombre")     
     #Registro Apellido
     while True: 
         apellido = input("Ingrese Apellido: ").strip()
-        if len(apellido) == 0:
-            print("[ERROR]El apellido no puede estar vacio")
-        else:
+        if validar_nombre(apellido):
             break
+        print("[ERROR] Use letras, espacios, guiones o apóstrofos en el apellido")
     #Registro DNI
     while True:
         dni = input("Ingrese DNI(8 dígitos): ").strip()
@@ -164,16 +196,12 @@ def registrar_expediente(ruta, expedientes_guardados):
             print("[EROR]Ingrese telefeno correctamente(9 dígitos -> 978526412)")
         else:
             break
-    #Registro Email
+    #Registro correo
     while True:
-        email = input("Ingrese su correo email: ").strip()
-        if len(email) == 0:
-            print("[ERROR]Ingrese su correo correctamente")
-        elif not email.endswith("@gmail.com"):
-            print("[ERROR]Ingrese su correo correctamente")
-            print("El correo tiene que tener @gmail.com al final")
-        else:
+        correo = input("Ingrese su correo email: ").strip()
+        if validar_correo(correo):
             break
+        print("[ERROR] Ingrese un correo válido. Ejemplo(usuario@dominio.com)") 
     #Registro Asunto
     asunto = selecionar_asunto()
     print(f"Asunto selecionado: {asunto}")
@@ -195,7 +223,7 @@ def registrar_expediente(ruta, expedientes_guardados):
         "Apellido":apellido, 
         "DNI": dni,
         "Telefono": telefono,
-        "Correo": email,
+        "Correo": correo,
         "Fecha": fecha,
         "Hora": hora,
         "Asunto": asunto,
@@ -617,4 +645,5 @@ def mostrar_menu():
                 print("Opcion inválida, ingrese una opcion de 1-5")
         except ValueError:
             print("Opcion inválida, ingrese una opcion de 1-5")
-mostrar_menu()
+if expedientes_guardados is not None:
+    mostrar_menu()
