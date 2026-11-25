@@ -69,10 +69,32 @@ def mostrar_ficha(expediente):
     print(f"ÁREA       : {expediente['Area']}")
     print(f"ESTADO     : {expediente['Estado']}")
     print("-" * 55)
+def obtener_clave_expediente(expediente):
+    partes = expediente["Código"].split("-")
+    anio = int(partes[0])
+    correlativo = int(partes[-1])
+    return anio, correlativo
+def ordenar_expedientes_por_codigo(expedientes):
+    ordenados = expedientes.copy()
+    cantidad = len(ordenados)
+    for pasada in range(cantidad - 1):
+        hubo_intercambio = False
+        for posicion in range(cantidad - 1 -pasada):
+            clave_actual = obtener_clave_expediente(ordenados[posicion])
+            clave_siguiente = obtener_clave_expediente(ordenados[posicion + 1])
+            if clave_actual > clave_siguiente:
+                temporal = ordenados[posicion]
+                ordenados[posicion] = ordenados[posicion + 1]
+                ordenados[posicion + 1] = temporal
+                hubo_intercambio = True
+        if not hubo_intercambio:
+            break
+    return ordenados           
 def formatear_listado(expedientes):
+    expedientes_ordenados = ordenar_expedientes_por_codigo(expedientes)
     filas = [["CÓDIGO", "FECHA", "SOLICITANTE", "ÁREA", "ESTADO"]]
 
-    for expediente in expedientes:
+    for expediente in expedientes_ordenados:
         filas.append([
             str(expediente["Código"]),
             str(expediente["Fecha"]),
@@ -518,16 +540,54 @@ def buscar_expediente(expedientes):
                 mostrar_ficha(expediente)
                 mostrar_historial(expediente)
         input("Presione Enter para continuar...")
+def filtrar_estados(expedientes, estados):
+    resultados = []
+    for expediente in expedientes:
+        if expediente["Estado"] in estados:
+            resultados.append(expediente)
+    return resultados
 def visualizar_expedientes(expedientes):
-    print("\n=== VISUALIZACIÓN DE EXPEDIENTES ===")
-
     if len(expedientes) == 0:
         print("No hay expedientes registrados para mostrar.")
-    else:
-        print(formatear_listado(expedientes), end="")
-
-    input("Presione Enter para continuar...")
-
+        input("Presione Enter para continuar...")
+        return
+    estados_abiertos = [
+        "Registrado",
+        "En Revisión",
+        "Observado",
+        "Derivado",
+        "En Proceso"
+    ]
+    while True:
+        print("\n=== VISUALIZACIÓN DE EXPEDIENTES ===")
+        print("1. Todos los expedientes")
+        print("2. Expedientes abiertos")
+        print("3. Expedientes aprobados")
+        print("4. Expedientes rechazados")
+        print("5. Expedientes archivados")
+        print("0. Volver al menú principal")
+        opcion = input("Seleccione una opción: ").strip()
+        if opcion == "0":
+            return
+        elif opcion == "1":
+            resultados = expedientes.copy()
+        elif opcion == "2":
+            resultados = filtrar_estados(expedientes, estados_abiertos)
+        elif opcion == "3":
+            resultados = filtrar_estados(expedientes, ["Aprobado"])
+        elif opcion == "4":
+            resultados = filtrar_estados(expedientes, ["Rechazado"])
+        elif opcion == "5":
+            resultados = filtrar_estados(expedientes, ["Archivado"])
+        else:
+            print("Opción inválida. Ingrese un número del 0 al 5.")
+            continue
+        print(f"\nExpedientes encontrados: {len(resultados)}")
+        if len(resultados) == 0:
+            print("No hay expedientes en esta sección")
+        else:
+            print(formatear_listado(resultados), end="")
+        input("Presione Enter para continuar...")
 expedientes_guardados=cargar_expedientes(ruta)
 def mostrar_menu():
     op = 0
